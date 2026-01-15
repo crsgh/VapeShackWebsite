@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VS Vape Shop - E-commerce with Square Integration
 
-## Getting Started
+This is a Next.js e-commerce application integrated with Square POS for real-time inventory management.
 
-First, run the development server:
+## Tech Stack
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: MongoDB (Mongoose) for users and orders
+- **Integration**: Square API (Catalog, Inventory, Orders)
+- **Auth**: JWT + bcryptjs
+
+## Prerequisites
+- Node.js 18+
+- MongoDB instance (local or Atlas)
+- Square Developer Account
+
+## Setup
+
+1. **Clone the repository**
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Configure Environment Variables**:
+   Create a `.env.local` file in the root directory:
+   ```env
+   SQUARE_ACCESS_TOKEN=your_square_access_token
+   SQUARE_APP_ID=your_square_app_id
+   SQUARE_ENVIRONMENT=production # or sandbox
+   MONGODB_URI=mongodb://localhost:27017/vswebsite
+   JWT_SECRET=your_jwt_secret_key
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   ```
+
+## Running the Application
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Real-time Inventory**: Syncs with Square POS.
+- **Product Listing**: Fetches products directly from Square Catalog.
+- **Cart & Checkout**: Manages cart state and processes orders.
+- **Authentication**: User registration and login with age verification.
+- **Age Gate**: Restricts access to legal age users.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Inventory Sync Strategy
 
-## Learn More
+1. **Real-time Fetch**: The website fetches inventory counts directly from Square API when loading pages.
+2. **Webhooks**: (Implemented in `/api/webhooks/square`) Receives updates from Square for `inventory.count.updated` to invalidate caches or update local DB if needed (currently direct fetch is used for simplicity and accuracy).
+3. **Checkout Validation**: Before confirming an order, the backend re-checks stock with Square to prevent overselling.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Build the application:
+   ```bash
+   npm run build
+   ```
+2. Start the production server:
+   ```bash
+   npm start
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scaling
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Mobile App**: The API at `/api/products` and `/api/orders` is CORS-enabled and JSON-ready for mobile consumption.
+- **Caching**: Implement Redis to cache Square inventory responses for high-traffic events, invalidated by Webhooks.
