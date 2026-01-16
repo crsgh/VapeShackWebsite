@@ -1,18 +1,8 @@
 import { inferCategory } from "./categories";
-
-export type InventoryItem = {
-  catalogObjectId: string;
-  variationId: string;
-  name: string;
-  sku: string | null;
-  priceMoney: {
-    amount: number;
-    currency: string;
-  };
-  imageUrl: string | null;
-  availableQuantity: number;
-  categoryName: string | null;
-};
+import type { InventoryItem } from "./square/inventory";
+import { connectMongo } from "./mongodb";
+import { Product } from "../models/Product";
+import type { ProductDocument } from "../models/Product";
 
 type CachedData = {
   items: InventoryItem[];
@@ -20,7 +10,7 @@ type CachedData = {
   timestamp: number;
 };
 
-const CACHE_DURATION = 1800000; // 30 minutes - longer cache for faster loading
+const CACHE_DURATION = 15000;
 let cachedData: CachedData | null = null;
 
 export function getCachedInventoryAndCategories(): CachedData | null {
@@ -64,4 +54,38 @@ export function setCachedInventoryAndCategories(
   };
 
   return cachedData;
+}
+
+export async function getInventoryAndCategories(): Promise<{
+  items: InventoryItem[];
+  categories: Array<{ name: string }>;
+}> {
+  const existing = getCachedInventoryAndCategories();
+  if (existing) {
+    return existing;
+  }
+  await connectMongo();
+  type ProductLean = ProductDocument & {
+    __v?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+  const docs = await Product.find().lean<ProductLean>();
+  const items: InventoryItem[] = docs.map(
+    ({ _id, __v, createdAt, updatedAt, ...rest }) => rest
+  );
+  const filtered = items.filter((item) => {
+    const name = item.name.toLowerCase();
+    const category = (item.categoryName || "").toLowerCase();
+    if (name.includes("ace 25") && category.includes("juice")) {
+      return false;
+    }
+    return true;
+  });
+  const { items: cachedItems, categories } =
+    setCachedInventoryAndCategories(filtered);
+  return {
+    items: cachedItems,
+    categories,
+  };
 }

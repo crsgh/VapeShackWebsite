@@ -25,6 +25,9 @@ export type AppConfig = {
   cors: {
     allowedOrigin: string | undefined;
   };
+  tasks: {
+    syncSquareSecret: string | undefined;
+  };
 };
 
 export const config: AppConfig = {
@@ -55,6 +58,9 @@ export const config: AppConfig = {
   },
   cors: {
     allowedOrigin: process.env.CORS_ALLOWED_ORIGIN,
+  },
+  tasks: {
+    syncSquareSecret: process.env.SYNC_SQUARE_SECRET,
   },
 };
 

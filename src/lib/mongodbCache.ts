@@ -4,7 +4,7 @@ import type { InventoryItem } from "./square/inventory";
 import { inferCategory } from "./categories";
 
 const CACHE_KEY = "inventory-cache";
-const CACHE_TTL_MINUTES = 30; // Cache for 30 minutes - longer cache for faster loading
+const CACHE_TTL_MINUTES = 0.5; // Cache for 0.5 minutes (30 seconds) - refresh frequently
 
 export async function getCachedInventoryAndCategories(): Promise<{
   items: InventoryItem[];

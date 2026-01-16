@@ -1,7 +1,6 @@
 import type * as Square from "square";
 import { getSquareClient } from "./client";
 import { config } from "../config";
-import { getCachedInventoryAndCategories } from "../mongodbCache";
 
 function isCatalogItem(
   obj: Square.CatalogObject
@@ -74,21 +73,30 @@ async function fetchCategoryMap(): Promise<Map<string, string>> {
   return categoryMap;
 }
 
-export async function fetchInventory(): Promise<InventoryItem[]> {
+export async function fetchInventory(
+  options?: { maxCatalogObjects?: number }
+): Promise<InventoryItem[]> {
   const client = getSquareClient();
   const categoryMap = await fetchCategoryMap();
 
-  // Square list endpoints are paginated (default 100). Pull all pages so you see every item.
+  // Square list endpoints are paginated (default 100).
+  // Optionally stop early once a maximum number of catalog objects is loaded.
   const firstPage = await client.catalog.list({ types: "ITEM" });
   const objects: Square.CatalogObject[] = [...(firstPage.data ?? [])];
 
-  // Fetch remaining pages sequentially to avoid SDK state races
   while (firstPage.hasNextPage()) {
+    if (options?.maxCatalogObjects && objects.length >= options.maxCatalogObjects) {
+      break;
+    }
     await firstPage.getNextPage();
     objects.push(...(firstPage.data ?? []));
   }
 
-  console.log(`[Inventory] Catalog objects fetched: ${objects.length}`);
+  console.log(
+    `[Inventory] Catalog objects fetched: ${objects.length}${
+      options?.maxCatalogObjects ? ` (limit ${options.maxCatalogObjects})` : ""
+    }`
+  );
   const variationIds: string[] = [];
 
   objects.filter(isCatalogItem).forEach((obj) => {
@@ -206,17 +214,9 @@ export async function fetchInventoryForVariations(
   return countMap;
 }
 
-export async function fetchProductByVariationId(variationId: string): Promise<InventoryItem | null> {
-  // First try to get from cached inventory (much faster - 30min cache)
-  const cached = await getCachedInventoryAndCategories();
-  if (cached) {
-    const found = cached.items.find((item) => item.variationId === variationId);
-    if (found) {
-      return found;
-    }
-  }
-
-  // Fall back to full fetch if not in cache
+export async function fetchProductByVariationId(
+  variationId: string
+): Promise<InventoryItem | null> {
   const items = await fetchInventory();
   return items.find((item) => item.variationId === variationId) || null;
 }

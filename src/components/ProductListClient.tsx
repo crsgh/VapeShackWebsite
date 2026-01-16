@@ -24,7 +24,6 @@ export default function ProductListClient({ initialItems }: ProductListClientPro
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(initialItems.length || 0);
   const categoryParam = searchParams.get("category") || "";
 
   useEffect(() => {
@@ -43,11 +42,6 @@ export default function ProductListClient({ initialItems }: ProductListClientPro
         if (!res.ok) throw new Error("Failed to load products");
         const data = await res.json();
         setItems(data.items || []);
-        if (typeof data.total === "number") {
-          setTotalItems(data.total);
-        } else if (Array.isArray(data.items)) {
-          setTotalItems(data.items.length);
-        }
         if (typeof data.totalPages === "number") {
           setTotalPages(data.totalPages);
         } else {

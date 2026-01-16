@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchInventory } from "../../../lib/square/inventory";
 import { inferCategory } from "../../../lib/categories";
 import { corsPreflight, withCorsResponse } from "../../../lib/api/cors";
-import { getCachedInventoryAndCategories, setCachedInventoryAndCategories } from "../../../lib/mongodbCache";
+import { getInventoryAndCategories } from "../../../lib/cache";
 
 export async function OPTIONS() {
   return corsPreflight();
@@ -10,37 +9,53 @@ export async function OPTIONS() {
 
 export async function GET(req: NextRequest) {
   try {
-    // Prefer MongoDB cached items if available
-    const cached = await getCachedInventoryAndCategories();
-    const items = cached ? cached.items : await fetchInventory();
-    console.log("[Products API] cachePresent=", Boolean(cached), "itemsCount=", items.length);
-    if (!cached) {
-      // Store freshly fetched items in cache for next requests
-      await setCachedInventoryAndCategories(items);
-    }
+    const { items } = await getInventoryAndCategories();
+    const availableItems = items.filter((item) => item.availableQuantity > 0);
+    const sortedItems = [...availableItems].sort((a, b) => {
+      const byName = a.name.localeCompare(b.name);
+      if (byName !== 0) return byName;
+      return a.variationId.localeCompare(b.variationId);
+    });
 
     const searchParams = req.nextUrl.searchParams;
     const q = searchParams.get("q");
     const category = searchParams.get("category");
+    const pageParam = searchParams.get("page");
+    const pageSizeParam = searchParams.get("pageSize");
 
-    let filtered = items;
-    console.log("[Products API] beforeFilter count=", filtered.length);
+    const page = Math.max(
+      1,
+      Number.isNaN(Number(pageParam)) ? 1 : parseInt(pageParam || "1", 10)
+    );
+    const pageSizeRaw = Number.isNaN(Number(pageSizeParam))
+      ? 20
+      : parseInt(pageSizeParam || "20", 10);
+    const pageSize = Math.min(Math.max(pageSizeRaw, 1), 100);
 
-    // Filter by search query
+    let filtered = sortedItems;
+
     if (q) {
       filtered = filtered.filter((item) =>
         item.name.toLowerCase().includes(q.toLowerCase())
       );
     }
 
-    // Filter by inferred category (matching by name, not Square category ID)
     if (category) {
-      filtered = filtered.filter((item) =>
-        inferCategory(item.name) === category
+      filtered = filtered.filter(
+        (item) => inferCategory(item.name) === category
       );
     }
 
-    const response = NextResponse.json({ items: filtered });
+    const total = filtered.length;
+    const totalPages = total === 0 ? 1 : Math.ceil(total / pageSize);
+    const start = (page - 1) * pageSize;
+    const pagedItems = filtered.slice(start, start + pageSize);
+
+    const response = NextResponse.json({
+      items: pagedItems,
+      total,
+      totalPages,
+    });
     return withCorsResponse(response);
   } catch {
     const response = NextResponse.json(
