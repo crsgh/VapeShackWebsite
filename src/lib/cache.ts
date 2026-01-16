@@ -43,9 +43,9 @@ export function setCachedInventoryAndCategories(
   });
 
   const categories = Array.from(categoryMap.entries())
-    .filter(([_, quantity]) => quantity > 0)
+    .filter(([, quantity]) => quantity > 0)
     .sort((a, b) => b[1] - a[1])
-    .map(([name, _]) => ({ name }));
+    .map(([name]) => ({ name }));
 
   cachedData = {
     items,
@@ -70,10 +70,17 @@ export async function getInventoryAndCategories(): Promise<{
     createdAt?: Date;
     updatedAt?: Date;
   };
-  const docs = await Product.find().lean<ProductLean>();
-  const items: InventoryItem[] = docs.map(
-    ({ _id, __v, createdAt, updatedAt, ...rest }) => rest
-  );
+  const docs = (await Product.find().lean()) as ProductLean[];
+  const items: InventoryItem[] = docs.map((doc: ProductLean) => ({
+    catalogObjectId: doc.catalogObjectId,
+    variationId: doc.variationId,
+    name: doc.name,
+    sku: doc.sku ?? null,
+    priceMoney: doc.priceMoney,
+    availableQuantity: doc.availableQuantity,
+    categoryName: doc.categoryName ?? null,
+    imageUrl: doc.imageUrl ?? null,
+  }));
   const filtered = items.filter((item) => {
     const name = item.name.toLowerCase();
     const category = (item.categoryName || "").toLowerCase();
