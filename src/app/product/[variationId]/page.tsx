@@ -1,4 +1,4 @@
-import { getInventoryAndCategories } from "@/lib/cache";
+import { fetchProductByVariationId } from "@/lib/square/inventory";
 import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,15 +9,15 @@ type Params = {
   }>;
 };
 
-export const revalidate = 0;
+// Cache product pages for 30 minutes
+export const revalidate = 1800;
 
 export default async function ProductPage({ params }: Params) {
   const { variationId } = await params;
   // Decode the ID in case it was encoded
   const decodedId = decodeURIComponent(variationId);
-
-  const { items } = await getInventoryAndCategories();
-  const item = items.find((i) => i.variationId === decodedId);
+  
+  const item = await fetchProductByVariationId(decodedId);
 
   if (!item) {
     notFound();
@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: Params) {
                   }} 
                 />
               ) : (
-                <button disabled className="w-full py-3 px-6 rounded-lg font-medium text-white bg-gray-400 cursor-not-allowed">
+                <button disabled className="w-full py-3 px-6 rounded-md font-semibold text-white bg-gray-400 cursor-not-allowed">
                   Out of Stock
                 </button>
               )}
@@ -91,3 +91,4 @@ export default async function ProductPage({ params }: Params) {
     </div>
   );
 }
+
