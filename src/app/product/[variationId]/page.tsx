@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: Params) {
                   }} 
                 />
               ) : (
-                <button disabled className="w-full py-3 px-6 rounded-md font-semibold text-white bg-gray-400 cursor-not-allowed">
+                <button disabled className="w-full py-3 px-6 rounded-lg font-medium text-white bg-gray-400 cursor-not-allowed">
                   Out of Stock
                 </button>
               )}

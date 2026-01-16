@@ -72,7 +72,7 @@ export default function AgeGatePage() {
           )}
           <button
             type="submit"
-            className="w-full rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition"
+            className="w-full rounded-lg bg-[#10a37f] py-2.5 text-sm font-semibold text-white hover:bg-[#1a7f64] transition-colors"
           >
             Enter Store
           </button>

@@ -89,7 +89,7 @@ export default function CartPage() {
         </p>
         <Link
           href="/"
-          className="bg-orange-600 text-white px-8 py-3 rounded-md hover:bg-orange-700 transition-colors"
+          className="inline-flex items-center justify-center bg-[#10a37f] text-white px-8 py-3 rounded-full font-medium hover:bg-[#1a7f64] transition-colors"
         >
           Start Shopping
         </Link>
@@ -283,7 +283,7 @@ export default function CartPage() {
             <button
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full bg-orange-600 text-white py-3 rounded-md font-bold hover:bg-orange-700 transition-colors disabled:opacity-50"
+              className="w-full bg-[#10a37f] text-white py-3 rounded-lg font-medium hover:bg-[#1a7f64] transition-colors disabled:opacity-50"
             >
               {loading ? "Processing..." : "Checkout"}
             </button>

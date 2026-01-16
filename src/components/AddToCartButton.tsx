@@ -21,10 +21,10 @@ export default function AddToCartButton({ item }: { item: CartItem }) {
     <button
       onClick={handleAddToCart}
       disabled={loading}
-      className={`w-full py-3 px-6 rounded-md font-semibold text-white transition-colors ${
+      className={`w-full py-3 px-6 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
         success
-          ? "bg-green-600 hover:bg-green-700"
-          : "bg-orange-600 hover:bg-orange-700"
+          ? "bg-[#10a37f] hover:bg-[#1a7f64]"
+          : "bg-[#10a37f] hover:bg-[#1a7f64]"
       }`}
     >
       {success ? "Added to Cart!" : "Add to Cart"}

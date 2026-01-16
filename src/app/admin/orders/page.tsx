@@ -166,7 +166,7 @@ export default function AdminOrdersPage() {
                         <button
                           onClick={() => handleComplete(order._id)}
                           disabled={updatingId === order._id}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50"
+                          className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-[#10a37f] text-white hover:bg-[#1a7f64] disabled:opacity-50"
                         >
                           {updatingId === order._id ? "Completing..." : "Mark Complete"}
                         </button>
@@ -182,4 +182,3 @@ export default function AdminOrdersPage() {
     </AdminGuard>
   );
 }
-

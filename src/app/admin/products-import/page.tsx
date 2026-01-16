@@ -128,7 +128,7 @@ export default function AdminProductsImportPage() {
             <button
               type="submit"
               disabled={loading || !file}
-              className="inline-flex items-center px-4 py-2 rounded-md bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 rounded-full bg-[#10a37f] text-white text-sm font-medium hover:bg-[#1a7f64] disabled:opacity-50"
             >
               {loading ? "Importing..." : "Import"}
             </button>
@@ -142,7 +142,7 @@ export default function AdminProductsImportPage() {
               type="button"
               onClick={handleSyncFromSquare}
               disabled={syncing}
-              className="inline-flex items-center px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 rounded-full bg-[#10a37f] text-white text-sm font-medium hover:bg-[#1a7f64] disabled:opacity-50"
             >
               {syncing ? "Syncing from Square..." : "Sync from Square"}
             </button>
