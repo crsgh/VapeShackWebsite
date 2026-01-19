@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
+import { inferCategory } from "@/lib/categories";
 
 type InventoryItem = {
   variationId: string;
@@ -26,41 +27,73 @@ export default function ProductListClient({ initialItems }: ProductListClientPro
   const [totalPages, setTotalPages] = useState(1);
   const categoryParam = searchParams.get("category") || "";
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const run = async () => {
-      try {
-        setLoading(true);
+    useEffect(() => {
+      // If we have initialItems from server, prefer client-side filtering/pagination
+      if (initialItems && initialItems.length > 0) {
         setError(null);
-        const params = new URLSearchParams();
-        if (query) params.append("q", query);
-        if (categoryParam) params.append("category", categoryParam);
-        params.append("page", String(page));
-        params.append("pageSize", "20");
-        const url = `/api/products${params.toString() ? "?" + params.toString() : ""}`;
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error("Failed to load products");
-        const data = await res.json();
-        setItems(data.items || []);
-        if (typeof data.totalPages === "number") {
-          setTotalPages(data.totalPages);
-        } else {
-          setTotalPages(1);
-        }
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-        setError((err as Error).message);
-      } finally {
         setLoading(false);
+
+        const qLower = query.trim().toLowerCase();
+        const filtered = initialItems.filter((item) => {
+          const matchesQuery = qLower
+            ? item.name.toLowerCase().includes(qLower) || (item.sku || "").toLowerCase().includes(qLower)
+            : true;
+          const matchesCategory = categoryParam
+            ? inferCategory(item.name) === categoryParam
+            : true;
+
+          return matchesQuery && matchesCategory && item.availableQuantity > 0;
+        });
+
+        const pageSize = 20;
+        const total = filtered.length;
+        const totalPagesCalc = total === 0 ? 1 : Math.ceil(total / pageSize);
+        setTotalPages(totalPagesCalc);
+        const start = (page - 1) * pageSize;
+        const paged = filtered.slice(start, start + pageSize);
+        setItems(paged);
+        return;
       }
-    };
-    run();
-    return () => controller.abort();
-  }, [query, categoryParam, page]);
+
+      // Fallback to network fetch when no initial items are available
+      const controller = new AbortController();
+      const run = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const params = new URLSearchParams();
+          if (query) params.append("q", query);
+          if (categoryParam) params.append("category", categoryParam);
+          params.append("page", String(page));
+          params.append("pageSize", "20");
+          const url = `/api/products${params.toString() ? "?" + params.toString() : ""}`;
+          const res = await fetch(url, { signal: controller.signal });
+          if (!res.ok) throw new Error("Failed to load products");
+          const data = await res.json();
+          setItems(data.items || []);
+          if (typeof data.totalPages === "number") {
+            setTotalPages(data.totalPages);
+          } else {
+            setTotalPages(1);
+          }
+        } catch (err) {
+          if ((err as Error).name === "AbortError") return;
+          setError((err as Error).message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      run();
+      return () => controller.abort();
+    }, [query, categoryParam, page, initialItems]);
 
   useEffect(() => {
     setPage(1);
   }, [categoryParam]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   return (
     <div className="space-y-6">

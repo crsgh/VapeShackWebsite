@@ -1,6 +1,8 @@
 import { inferCategory } from "./categories";
 import { fetchInventory } from "./square/inventory";
 import { getCachedInventoryAndCategories as getMongoCached } from "./mongodbCache";
+import { connectMongo } from "./mongodb";
+import { Product } from "../models/Product";
 
 export type InventoryItem = {
   catalogObjectId: string;
@@ -72,7 +74,40 @@ export async function getInventoryAndCategories(): Promise<{
   items: InventoryItem[];
   categories: Array<{ name: string }>;
 }> {
-  // Try Mongo-backed cache first (shared between server instances)
+  // 1) If Product documents were uploaded via the admin sync, use them as source-of-truth
+  try {
+    await connectMongo();
+    const docs = await Product.find({}).lean();
+    if (docs && docs.length > 0) {
+      const items = docs.map((d: any) => ({
+        catalogObjectId: d.catalogObjectId,
+        variationId: d.variationId,
+        name: d.name,
+        sku: d.sku ?? null,
+        priceMoney: d.priceMoney,
+        imageUrl: d.imageUrl ?? null,
+        availableQuantity: d.availableQuantity ?? 0,
+        categoryName: d.categoryName ?? null,
+      })) as InventoryItem[];
+
+      // derive category list from stored categoryName or inferred categories
+      const categorySet = new Set<string>();
+      items.forEach((it) => {
+        if (it.categoryName) categorySet.add(it.categoryName);
+        else {
+          const inferred = inferCategory(it.name);
+          if (inferred !== "Unknown") categorySet.add(inferred);
+        }
+      });
+
+      const categories = Array.from(categorySet).sort().map((name) => ({ name }));
+      return { items, categories };
+    }
+  } catch (err) {
+    // If Mongo is not configured or query fails, fall back to other caches
+  }
+
+  // 2) Try Mongo-backed cache collection (CachedInventory)
   try {
     const mongo = await getMongoCached();
     if (mongo) {
@@ -83,11 +118,11 @@ export async function getInventoryAndCategories(): Promise<{
     // ignore and fall back to local cache / fetch
   }
 
-  // Try in-memory cache
+  // 3) Try in-memory cache
   const local = getCachedInventoryAndCategories();
   if (local) return local;
 
-  // Fallback: fetch from Square and populate in-memory cache
+  // 4) Fallback: fetch from Square and populate in-memory cache
   const items = await fetchInventory();
   const cached = setCachedInventoryAndCategories(items);
   return cached;

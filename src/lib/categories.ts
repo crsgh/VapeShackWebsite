@@ -1,7 +1,7 @@
 export type InferredCategory = "Disposable" | "E-Juice" | "CPS" | "Devices" | "Accessories" | "Unknown";
 
 const categoryKeywords: Record<InferredCategory, string[]> = {
-  Disposable: ["disposable", "elf", "puff", "iget", "zyn", "vape pen", "turbo"],
+  Disposable: ["disposable", "elf", "puff", "iget", "zyn", "vape pen", "turbo", "ace"],
   "E-Juice": [
     "e-juice",
     "ejuice",
