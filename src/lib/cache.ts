@@ -123,7 +123,22 @@ export async function getInventoryAndCategories(): Promise<{
   if (local) return local;
 
   // 4) Fallback: fetch from Square and populate in-memory cache
-  const items = await fetchInventory();
-  const cached = setCachedInventoryAndCategories(items);
-  return cached;
+  // Prevent concurrent requests from issuing multiple parallel fetches to Square
+  // by reusing an in-flight promise.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const globalAny = global as any;
+  if (!globalAny.__inventoryFetchInFlight) {
+    globalAny.__inventoryFetchInFlight = (async () => {
+      try {
+        const items = await fetchInventory();
+        const cached = setCachedInventoryAndCategories(items);
+        return cached;
+      } finally {
+        // clear the in-flight promise so future fetches can run when needed
+        globalAny.__inventoryFetchInFlight = null;
+      }
+    })();
+  }
+
+  return await globalAny.__inventoryFetchInFlight;
 }

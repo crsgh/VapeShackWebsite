@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getCachedInventoryAndCategories, setCachedInventoryAndCategories } from "../lib/mongodbCache";
-import { fetchInventory } from "../lib/square/inventory";
+import { getInventoryAndCategories } from "../lib/cache";
 import { inferCategory } from "../lib/categories";
 import Sidebar from "@/components/Sidebar";
 import ProductListClient from "@/components/ProductListClient";
@@ -9,41 +9,22 @@ import { ProductsSkeleton } from "@/components/ProductsSkeleton";
 export const revalidate = 1800; // ISR: revalidate every 30 minutes
 
 async function ProductsContent() {
-  // Try MongoDB cache first (instant load on repeat visits or cache hits)
-  const cachedData = await getCachedInventoryAndCategories();
-  if (cachedData) {
-    const categoryObjs = cachedData.categories.map((name) => ({ name }));
-    return (
-      <>
-        <Sidebar initialCategories={categoryObjs} />
-        <main className="flex-1">
-          <ProductListClient initialItems={cachedData.items} />
-        </main>
-      </>
-    );
+  // Use unified cache which prefers uploaded Product docs, then mongo cache, then in-memory, then Square fetch
+  const data = await getInventoryAndCategories();
+
+  // Also store to Mongo cache collection if not already present (helps other instances)
+  try {
+    await setCachedInventoryAndCategories(data.items as any);
+  } catch (e) {
+    // ignore write errors
   }
 
-  // Cache miss or expired: fetch from Square API
-  const initialItems = await fetchInventory();
-  
-  // Store in MongoDB cache for next request
-  await setCachedInventoryAndCategories(initialItems);
-
-  // Compute inferred categories from items
-  const categoriesSet = new Set<string>();
-  for (const item of initialItems) {
-    const inferred = inferCategory(item.name);
-    if (inferred !== "Unknown") {
-      categoriesSet.add(inferred);
-    }
-  }
-  const categories = Array.from(categoriesSet).sort().map((name) => ({ name }));
-
+  const categoryObjs = data.categories;
   return (
     <>
-      <Sidebar initialCategories={categories} />
+      <Sidebar initialCategories={categoryObjs} />
       <main className="flex-1">
-        <ProductListClient initialItems={initialItems} />
+        <ProductListClient initialItems={data.items as any} />
       </main>
     </>
   );
