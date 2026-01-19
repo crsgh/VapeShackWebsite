@@ -1,8 +1,20 @@
 import { inferCategory } from "./categories";
-import type { InventoryItem } from "./square/inventory";
-import { connectMongo } from "./mongodb";
-import { Product } from "../models/Product";
-import type { ProductDocument } from "../models/Product";
+import { fetchInventory } from "./square/inventory";
+import { getCachedInventoryAndCategories as getMongoCached } from "./mongodbCache";
+
+export type InventoryItem = {
+  catalogObjectId: string;
+  variationId: string;
+  name: string;
+  sku: string | null;
+  priceMoney: {
+    amount: number;
+    currency: string;
+  };
+  imageUrl: string | null;
+  availableQuantity: number;
+  categoryName: string | null;
+};
 
 type CachedData = {
   items: InventoryItem[];
@@ -10,7 +22,7 @@ type CachedData = {
   timestamp: number;
 };
 
-const CACHE_DURATION = 15000;
+const CACHE_DURATION = 1800000; // 30 minutes - longer cache for faster loading
 let cachedData: CachedData | null = null;
 
 export function getCachedInventoryAndCategories(): CachedData | null {
@@ -43,9 +55,9 @@ export function setCachedInventoryAndCategories(
   });
 
   const categories = Array.from(categoryMap.entries())
-    .filter(([, quantity]) => quantity > 0)
+    .filter(([_, quantity]) => quantity > 0)
     .sort((a, b) => b[1] - a[1])
-    .map(([name]) => ({ name }));
+    .map(([name, _]) => ({ name }));
 
   cachedData = {
     items,
@@ -60,39 +72,23 @@ export async function getInventoryAndCategories(): Promise<{
   items: InventoryItem[];
   categories: Array<{ name: string }>;
 }> {
-  const existing = getCachedInventoryAndCategories();
-  if (existing) {
-    return existing;
-  }
-  await connectMongo();
-  type ProductLean = ProductDocument & {
-    __v?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
-  };
-  const docs = (await Product.find().lean()) as ProductLean[];
-  const items: InventoryItem[] = docs.map((doc: ProductLean) => ({
-    catalogObjectId: doc.catalogObjectId,
-    variationId: doc.variationId,
-    name: doc.name,
-    sku: doc.sku ?? null,
-    priceMoney: doc.priceMoney,
-    availableQuantity: doc.availableQuantity,
-    categoryName: doc.categoryName ?? null,
-    imageUrl: doc.imageUrl ?? null,
-  }));
-  const filtered = items.filter((item) => {
-    const name = item.name.toLowerCase();
-    const category = (item.categoryName || "").toLowerCase();
-    if (name.includes("ace 25") && category.includes("juice")) {
-      return false;
+  // Try Mongo-backed cache first (shared between server instances)
+  try {
+    const mongo = await getMongoCached();
+    if (mongo) {
+      const categoryObjs = (mongo.categories || []).map((name) => ({ name }));
+      return { items: mongo.items as InventoryItem[], categories: categoryObjs };
     }
-    return true;
-  });
-  const { items: cachedItems, categories } =
-    setCachedInventoryAndCategories(filtered);
-  return {
-    items: cachedItems,
-    categories,
-  };
+  } catch (err) {
+    // ignore and fall back to local cache / fetch
+  }
+
+  // Try in-memory cache
+  const local = getCachedInventoryAndCategories();
+  if (local) return local;
+
+  // Fallback: fetch from Square and populate in-memory cache
+  const items = await fetchInventory();
+  const cached = setCachedInventoryAndCategories(items);
+  return cached;
 }
