@@ -1,4 +1,4 @@
-import { fetchProductByVariationId } from "@/lib/square/inventory";
+import { getInventoryAndCategories } from "@/lib/cache";
 import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,11 +17,10 @@ export default async function ProductPage({ params }: Params) {
   // Decode the ID in case it was encoded
   const decodedId = decodeURIComponent(variationId);
   
-  const item = await fetchProductByVariationId(decodedId);
+  const { items } = await getInventoryAndCategories();
+  const item = items.find((i) => i.variationId === decodedId);
 
-  if (!item) {
-    notFound();
-  }
+  if (!item) notFound();
 
   return (
     <div className="container mx-auto px-4 py-8">
