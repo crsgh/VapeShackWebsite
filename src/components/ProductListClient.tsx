@@ -21,11 +21,18 @@ export default function ProductListClient({ initialItems }: ProductListClientPro
   const searchParams = useSearchParams();
   const [items, setItems] = useState<InventoryItem[]>(initialItems || []);
   const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const categoryParam = searchParams.get("category") || "";
+
+    useEffect(() => {
+      // debounce the input to avoid spamming the product fetch/filter
+      const t = setTimeout(() => setQuery(inputValue.trim()), 300);
+      return () => clearTimeout(t);
+    }, [inputValue]);
 
     useEffect(() => {
       // If we have initialItems from server, prefer client-side filtering/pagination
@@ -104,9 +111,10 @@ export default function ProductListClient({ initialItems }: ProductListClientPro
         </div>
         <div className="w-full md:w-96 relative">
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             placeholder="Search by name or SKU..."
+            aria-label="Search products"
             className="w-full bg-white border border-gray-200 rounded-full py-2.5 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#10a37f] focus:border-transparent transition-shadow"
           />
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
