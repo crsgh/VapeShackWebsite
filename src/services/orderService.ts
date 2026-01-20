@@ -1,5 +1,6 @@
 import { connectMongo } from "../lib/mongodb";
 import { Order, OrderDocument, OrderItem } from "../models/Order";
+import { Product } from "../models/Product";
 import { CartItemInput, checkStockForCart } from "./inventoryService";
 import { getSquareClient } from "../lib/square/client";
 import { config } from "../lib/config";
@@ -69,7 +70,36 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
     totalAmount,
     currency,
     status: "pending",
+    shippingAddress: input.shippingAddress,
+    paymentMethod: input.paymentMethod,
   });
+
+  // Reduce product stock immediately since payment was made client-side
+  try {
+    for (const it of orderItems) {
+      const updated = await Product.findOneAndUpdate(
+        { variationId: it.variationId },
+        { $inc: { availableQuantity: -it.quantity } },
+        { new: true }
+      );
+
+      if (updated && updated.availableQuantity < 0) {
+        updated.availableQuantity = 0;
+        await updated.save();
+      }
+    }
+
+    // mark order as fulfilled immediately
+    order.status = "fulfilled";
+    await order.save();
+
+    // Clear inventory cache so customers see updated quantities
+    clearInventoryCache();
+  } catch (err) {
+    // If stock update fails, leave order pending and rethrow
+    console.error("[orderService] failed to decrement stock on checkout:", err);
+    throw err;
+  }
 
   return {
     order,

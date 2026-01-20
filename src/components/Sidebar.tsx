@@ -24,7 +24,7 @@ export default function Sidebar({ initialCategories }: SidebarProps) {
         <ul className="space-y-1">
           <li>
             <Link
-              href="/"
+              href="/products"
               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                 !currentCategory
                   ? "bg-gray-100 text-gray-900 font-medium"
@@ -38,7 +38,7 @@ export default function Sidebar({ initialCategories }: SidebarProps) {
             <li className="px-3 py-2 text-gray-400 text-sm">No categories found</li>
           ) : (
             initialCategories.map((category) => {
-              const href = `/?category=${encodeURIComponent(category.name)}`;
+              const href = `/products?category=${encodeURIComponent(category.name)}`;
               const isActive = currentCategory === category.name;
               return (
                 <li key={category.name}>

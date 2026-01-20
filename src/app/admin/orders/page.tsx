@@ -124,9 +124,12 @@ export default function AdminOrdersPage() {
                     Payment
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Shipping
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-2" />
+                  
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -156,21 +159,22 @@ export default function AdminOrdersPage() {
                     <td className="px-4 py-2 text-sm text-gray-500">
                       {order.paymentMethod || "-"}
                     </td>
+                    <td className="px-4 py-2 text-sm text-gray-700">
+                      {order.shippingAddress ? (
+                        <div className="text-sm">
+                          <div className="font-medium">{order.shippingAddress.fullName}</div>
+                          <div className="text-xs text-gray-500">{order.shippingAddress.line1}</div>
+                          <div className="text-xs text-gray-500">{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}</div>
+                          <div className="text-xs text-gray-500">{order.shippingAddress.country}</div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-400">-</div>
+                      )}
+                    </td>
                     <td className="px-4 py-2 text-sm">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                         {order.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {order.status === "pending" && (
-                        <button
-                          onClick={() => handleComplete(order._id)}
-                          disabled={updatingId === order._id}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50"
-                        >
-                          {updatingId === order._id ? "Completing..." : "Mark Complete"}
-                        </button>
-                      )}
                     </td>
                   </tr>
                 ))}

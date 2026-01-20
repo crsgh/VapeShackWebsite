@@ -24,7 +24,7 @@ export default async function ProductPage({ params }: Params) {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <Link href="/" className="text-sm text-gray-500 hover:text-orange-600 mb-4 inline-block">
+      <Link href="/products" className="text-sm text-gray-500 hover:text-orange-600 mb-4 inline-block">
         ← Back to products
       </Link>
 

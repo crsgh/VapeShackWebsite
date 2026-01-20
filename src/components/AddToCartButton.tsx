@@ -24,7 +24,7 @@ export default function AddToCartButton({ item }: { item: CartItem }) {
         disabled={loading}
         className="w-full py-3 px-6 rounded-lg font-medium text-white bg-[#10a37f] hover:bg-[#1a7f64] transition-colors disabled:opacity-50"
       >
-        {loading ? "Processing..." : "I want"}
+        {loading ? "Processing..." : "Buy Now"}
       </button>
     </div>
   );
