@@ -1,45 +1,18 @@
-import { Suspense } from "react";
-import { getCachedInventoryAndCategories, setCachedInventoryAndCategories } from "../lib/mongodbCache";
-import { getInventoryAndCategories } from "../lib/cache";
-import { inferCategory } from "../lib/categories";
-import Sidebar from "@/components/Sidebar";
-import ProductListClient from "@/components/ProductListClient";
-import { ProductsSkeleton } from "@/components/ProductsSkeleton";
-
-export const revalidate = 1800; // ISR: revalidate every 30 minutes
-
-async function ProductsContent() {
-  // Use unified cache which prefers uploaded Product docs, then mongo cache, then in-memory, then Square fetch
-  const data = await getInventoryAndCategories();
-
-  // Also store to Mongo cache collection if not already present (helps other instances)
-  try {
-    await setCachedInventoryAndCategories(data.items as any);
-  } catch (e) {
-    // ignore write errors
-  }
-
-  const categoryObjs = data.categories;
-  return (
-    <>
-      <Sidebar initialCategories={categoryObjs} />
-      <main className="flex-1">
-        <ProductListClient initialItems={data.items as any} />
-      </main>
-    </>
-  );
-}
-
+import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 
 export default function Home() {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-        <div className="container mx-auto px-4 py-8 flex gap-6">
-          <Suspense fallback={<ProductsSkeleton />}>
-            <ProductsContent />
-          </Suspense>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-100">
+        <div className="container mx-auto px-6 py-24 text-center">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6">Welcome to Vape Shack</h1>
+          <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto mb-8">
+            Discover curated products selected just for you. Fast checkout, great prices, and reliable shipping.
+          </p>
+          <Link href="/products" className="inline-block bg-white hover:bg-gray-100 text-gray-900 font-semibold px-6 py-3 rounded-md shadow">
+            Shop Now
+          </Link>
         </div>
       </div>
     </AuthGuard>
