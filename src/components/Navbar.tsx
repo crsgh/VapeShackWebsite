@@ -25,7 +25,7 @@ export default function Navbar() {
                   </span>
                   <button
                     onClick={logout}
-                    className="px-4 py-2 rounded-full bg-[#10a37f] text-white text-sm font-medium hover:bg-[#1a7f64] transition-colors disabled:opacity-50"
+                    className="px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
                     Logout
                   </button>
@@ -70,7 +70,7 @@ export default function Navbar() {
                 </div>
                 <button
                   onClick={logout}
-                  className="w-full px-4 py-2 rounded-full bg-[#10a37f] text-white text-sm font-medium hover:bg-[#1a7f64] transition-colors disabled:opacity-50"
+                  className="w-full px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
                   Logout
                 </button>

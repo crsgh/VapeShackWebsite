@@ -19,11 +19,20 @@ async function ProductsContent() {
   return (
     <>
       <Sidebar initialCategories={categoryObjs} />
-      <main className="flex-1">
-        <div className="mb-4">
-          <CategoryFilter initialCategories={categoryObjs} />
+      {/* 
+        MAIN CONTAINER - Responsive adjustments:
+        - hidden md:block: Sidebar hidden on mobile, visible on desktop (md = medium screens)
+        - ml-0 md:ml-56: No left margin on mobile, 56 units on desktop
+        - px-3 sm:px-4 md:px-6: Increases padding as screen gets larger
+        - py-4 sm:py-6 md:py-8: Increases vertical padding on larger screens
+      */}
+      <main className="flex-1 ml-0 md:ml-56 min-h-screen bg-white">
+        <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 w-full">
+          <div className="mb-6 md:hidden">
+            <CategoryFilter initialCategories={categoryObjs} />
+          </div>
+          <ProductListClient initialItems={data.items as any} />
         </div>
-        <ProductListClient initialItems={data.items as any} />
       </main>
     </>
   );
@@ -34,12 +43,16 @@ import AuthGuard from "@/components/AuthGuard";
 export default function ProductsPage() {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-white text-gray-900">
-        <div className="w-full px-2 md:px-4 py-8 flex gap-6">
-          <Suspense fallback={<ProductsSkeleton />}>
-            <ProductsContent />
-          </Suspense>
-        </div>
+      {/* 
+        RESPONSIVE LAYOUT - This uses flexbox to adapt to screen size:
+        - flex: Creates horizontal layout
+        - On desktop: sidebar (fixed width) + main content
+        - On mobile: sidebar hidden, main content full width
+      */}
+      <div className="flex min-h-screen bg-white">
+        <Suspense fallback={<ProductsSkeleton />}>
+          <ProductsContent />
+        </Suspense>
       </div>
     </AuthGuard>
   );
