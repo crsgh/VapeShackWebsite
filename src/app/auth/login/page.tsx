@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
@@ -54,11 +54,23 @@ export default function LoginPage() {
     }
   };
 
+  useEffect(() => {
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow || "";
+      document.body.style.overflow = prevBodyOverflow || "";
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="h-screen flex items-start justify-center bg-white px-4 overflow-hidden pt-20 md:pt-28">
       <div className="max-w-[320px] w-full">
-        <h2 className="text-3xl font-semibold text-center text-gray-900 mb-2">
-          Welcome back
+        <img src="/vslogo.png" alt="VS logo" className="mx-auto w-36 md:w-53 h-auto mb-2 -mt-15"/>
+        <h2 className="text-2xl font-thin text-center text-gray-900 mb-2">
+          Vape Shack Bulacan
         </h2>
         
         {error && (

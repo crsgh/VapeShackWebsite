@@ -31,9 +31,11 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <div className="min-h-screen bg-gray-50">
-            {children}
-          </div>
+          <main className="min-h-screen bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
         </Providers>
       </body>
     </html>

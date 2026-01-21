@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import NoScroll from "@/components/NoScroll";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -62,8 +63,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+    <NoScroll>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
           Create Account
         </h2>
@@ -151,5 +153,6 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+    </NoScroll>
   );
 }
