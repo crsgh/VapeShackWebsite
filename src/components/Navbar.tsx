@@ -13,7 +13,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="text-lg font-semibold tracking-tight">
-            Vape Shack Bulacan
+            
           </Link>
 
           <div className="flex items-center space-x-4">

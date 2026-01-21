@@ -15,8 +15,10 @@ export default function Sidebar({ initialCategories }: SidebarProps) {
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get("category") || "";
 
+  const filteredCategories = initialCategories.filter(c => (c.name || "").toLowerCase() !== "accessories");
+
   return (
-    <aside className="w-[260px] flex-shrink-0 hidden md:block">
+    <aside className="w-[260px] flex-shrink-0 hidden md:block md:-ml-6 lg:-ml-8">
       <div className="sticky top-20 text-gray-900 pr-4">
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
           Categories
@@ -34,10 +36,10 @@ export default function Sidebar({ initialCategories }: SidebarProps) {
               All Products
             </Link>
           </li>
-          {initialCategories.length === 0 ? (
+          {filteredCategories.length === 0 ? (
             <li className="px-3 py-2 text-gray-400 text-sm">No categories found</li>
           ) : (
-            initialCategories.map((category) => {
+            filteredCategories.map((category) => {
               const href = `/products?category=${encodeURIComponent(category.name)}`;
               const isActive = currentCategory === category.name;
               return (
