@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AGE_COOKIE_NAME = "ageVerified";
-
-const publicRoutes = [
-  "/age-gate",
-  "/api/webhooks/square",
-  "/api/auth/login",
-  "/api/auth/register",
-  "/api/auth/refresh",
-  "/api/products",
-];
-
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -23,22 +12,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
-  const ageVerified = req.cookies.get(AGE_COOKIE_NAME)?.value;
-
-  if (ageVerified === "true") {
-    return NextResponse.next();
-  }
-
-  const url = req.nextUrl.clone();
-  url.pathname = "/age-gate";
-  // Preserve full original path + query string so category filter stays intact
-  const fullPathWithQuery = req.nextUrl.pathname + req.nextUrl.search;
-  url.searchParams.set("from", fullPathWithQuery || pathname);
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 export const config = {
