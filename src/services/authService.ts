@@ -4,6 +4,14 @@ import { connectMongo } from "../lib/mongodb";
 import { User, UserDocument, UserRole } from "../models/User";
 import { config } from "../lib/config";
 
+const PASSWORD_REQUIREMENTS = {
+  minLength: 8,
+  hasUppercase: /[A-Z]/,
+  hasLowercase: /[a-z]/,
+  hasNumber: /[0-9]/,
+  hasSpecial: /[!@#$%^&*()_+\-=\[\]{};:'"<>,.?/]/,
+};
+
 export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
@@ -36,6 +44,25 @@ function calculateAge(dob: Date) {
     age -= 1;
   }
   return age;
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < PASSWORD_REQUIREMENTS.minLength) {
+    return `Password must be at least ${PASSWORD_REQUIREMENTS.minLength} characters long`;
+  }
+  if (!PASSWORD_REQUIREMENTS.hasUppercase.test(password)) {
+    return "Password must contain at least one uppercase letter";
+  }
+  if (!PASSWORD_REQUIREMENTS.hasLowercase.test(password)) {
+    return "Password must contain at least one lowercase letter";
+  }
+  if (!PASSWORD_REQUIREMENTS.hasNumber.test(password)) {
+    return "Password must contain at least one number";
+  }
+  if (!PASSWORD_REQUIREMENTS.hasSpecial.test(password)) {
+    return "Password must contain at least one special character (!@#$%^&*)";
+  }
+  return null;
 }
 
 function ensureJwtSecrets() {
@@ -84,6 +111,11 @@ export async function register(input: RegisterInput) {
   const age = calculateAge(dob);
   if (age < config.auth.minAge) {
     throw new Error("User does not meet minimum age requirement");
+  }
+
+  const passwordError = validatePassword(input.password);
+  if (passwordError) {
+    throw new Error(passwordError);
   }
 
   const passwordHash = await bcrypt.hash(input.password, 10);
